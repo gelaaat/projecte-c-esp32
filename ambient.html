@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html><head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
+    <style>
+    canvas{
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+    </style>
+  <style type="text/css">/* Chart.js */
+@keyframes chartjs-render-animation{from{opacity:.99}to{opacity:1}}.chartjs-render-monitor{animation:chartjs-render-animation 1ms}.chartjs-size-monitor,.chartjs-size-monitor-expand,.chartjs-size-monitor-shrink{position:absolute;direction:ltr;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1}.chartjs-size-monitor-expand>div{position:absolute;width:1000000px;height:1000000px;left:0;top:0}.chartjs-size-monitor-shrink>div{position:absolute;width:200%;height:200%;left:0;top:0}</style></head>
+<body><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+
+<h1>Dades ambientals i de consum</h1>
+<!-- <textarea id="myText" cols="40" rows="5"></textarea> -->
+<canvas id="canvas" width="1207" height="603" class="chartjs-render-monitor" style="display: block; height: 483px; width: 966px;"></canvas>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script>
+  var myChart;
+  var socket;
+  const MAX_ELEMENTS = 25000;
+  var current_elements = 0;
+
+  var config = {
+			type: 'line',
+			data: {
+				datasets: [
+          {
+            label: 'Temperatura [ºC]',
+            //backgroundColor: "",
+            borderColor: "#F00", //window.chartColors.red,
+            data: [],
+            fill: false,
+          },
+          {
+            label: 'Humitat [%]',
+            //backgroundColor: "",
+            borderColor: "#10A9EB",//window.chartColors.red,
+            data: [],
+            fill: false,
+          },
+          {
+            label: 'Pressio [kPa]',
+            //backgroundColor: "",
+            borderColor:"#6E0475", //window.chartColors.red,
+            data: [],
+            fill: false,
+          },
+          {
+            label: 'Altitud [m]',
+            //backgroundColor: "",
+            borderColor:"#0A580C", //window.chartColors.red,
+            data: [],
+            fill: false,
+          },
+          {
+            label: 'IRMS [A]',
+            //backgroundColor: "",
+            borderColor: "#ECFF00", //window.chartColors.red,
+            data: [],
+            fill: false,
+          },
+          {
+            label: 'Durada [s]',
+            //backgroundColor: "",
+            borderColor: "#000000", //window.chartColors.red,
+            data: [],
+            fill: false,
+          },
+      ]
+			},
+			options: {
+				responsive: true,
+				tooltips: {
+					mode: 'index',
+					intersect: false,
+				},
+        scales: {
+            yAxes: [{
+                ticks: {
+                    suggestedMin: 0,
+                    suggestedMax: 50
+                }
+            }]
+        }
+			}
+		};
+
+		window.onload = function() {
+			var ctx = document.getElementById('canvas').getContext('2d');
+			myChart = new Chart(ctx, config);
+
+      var socket = new WebSocket("ws://192.168.137.1:8000");
+
+      socket.onmessage = async function (event) {
+        let obj = JSON.parse(event.data);
+        console.log(obj);
+        let dades = [];
+        dades[0] = obj.temperatura;
+        dades[1] = obj.humitat;
+        dades[2] = obj.pressio;
+        dades[3] = obj.altitud;
+        dades[4] = obj.IRMS;
+        dades[5] = obj.durada;
+
+        current_elements += dades.length;
+
+        if(current_elements > MAX_ELEMENTS) {
+          n = current_elements-MAX_ELEMENTS;
+          myChart.data.labels.splice(0, n);
+          myChart.data.datasets[0].data.splice(0, n);
+          myChart.data.datasets[1].data.splice(1, n);
+          myChart.data.datasets[2].data.splice(2, n);
+          myChart.data.datasets[3].data.splice(3, n);
+          myChart.data.datasets[4].data.splice(4, n);
+          myChart.data.datasets[5].data.splice(5, n);
+        }
+         
+        myChart.data.labels.push("");
+        myChart.data.datasets[0].data.push(dades[0]);
+        myChart.data.datasets[1].data.push(dades[1]);
+        myChart.data.datasets[2].data.push(dades[2]);
+        myChart.data.datasets[3].data.push(dades[3]);
+        myChart.data.datasets[4].data.push(dades[4]);
+        myChart.data.datasets[5].data.push(dades[5]);
+        myChart.update();
+      }
+
+    };
+</script>
+
+</body></html>
